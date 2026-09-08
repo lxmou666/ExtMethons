@@ -1,0 +1,31 @@
+name: Build AmapLinkProbe APK
+on:
+  push:
+    branches: [ chatgpt-amap-link-probe-build ]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Reconstruct project
+        run: |
+          mkdir -p amap-link-probe
+          cat ci/amapb64.part.* | base64 -d > /tmp/amap-link-probe.zip
+          unzip -q /tmp/amap-link-probe.zip -d amap-link-probe
+      - name: Build debug APK with AMap Agent SDK
+        working-directory: amap-link-probe
+        run: gradle :app:assembleDebug -PuseAmapMaven=true --stacktrace
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: AmapLinkProbe-debug
+          path: amap-link-probe/app/build/outputs/apk/debug/app-debug.apk
