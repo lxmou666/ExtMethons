@@ -1,0 +1,36 @@
+name: Probe AMap Maven
+on:
+  push:
+    branches: [ chatgpt-amap-link-probe-build ]
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe Aliyun Maven
+        shell: bash
+        run: |
+          set -u
+          base='https://maven.aliyun.com/repository/public'
+          urls=(
+            "$base/com/amap/lbs/client/amap-agent/1.1.41/amap-agent-1.1.41.pom"
+            "$base/com/amap/lbs/client/amap-agent/maven-metadata.xml"
+            "$base/com/amap/lbs/client/amap-link/maven-metadata.xml"
+            "$base/com/amap/lbs/client/amap-link-sdk/maven-metadata.xml"
+            "$base/com/amap/lbs/client/link-sdk/maven-metadata.xml"
+            "$base/com/amap/lbs/client/amap-link-client/maven-metadata.xml"
+            "$base/com/amap/lbs/client/amaplink/maven-metadata.xml"
+            "$base/com/amap/lbs/client/amaplinkclient/maven-metadata.xml"
+            "$base/com/amap/api/link/maven-metadata.xml"
+            "$base/com/amap/api/link-sdk/maven-metadata.xml"
+          )
+          for u in "${urls[@]}"; do
+            echo '===='
+            echo "$u"
+            code=$(curl -L -sS -o /tmp/out -w '%{http_code}' "$u" || true)
+            echo "HTTP $code"
+            if [ "$code" = 200 ]; then
+              cat /tmp/out
+              echo
+            fi
+          done
